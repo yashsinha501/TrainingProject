@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SRS_TravelDesk.Data;
 
@@ -11,9 +12,11 @@ using SRS_TravelDesk.Data;
 namespace SRS_TravelDesk.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250611141328_user")]
+    partial class user
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -33,6 +36,9 @@ namespace SRS_TravelDesk.Migrations
                     b.Property<int>("CommentedById")
                         .HasColumnType("int");
 
+                    b.Property<int>("CommentedByUserId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -49,7 +55,7 @@ namespace SRS_TravelDesk.Migrations
 
                     b.HasIndex("TravelRequestId");
 
-                    b.ToTable("Comments");
+                    b.ToTable("Comment");
                 });
 
             modelBuilder.Entity("SRS_TravelDesk.Models.Entities.Document", b =>
@@ -112,11 +118,6 @@ namespace SRS_TravelDesk.Migrations
                         {
                             Id = 3,
                             Name = "Employee"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Name = "TravelHr"
                         });
                 });
 
@@ -163,7 +164,7 @@ namespace SRS_TravelDesk.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TravelRequests");
+                    b.ToTable("TravelRequest");
                 });
 
             modelBuilder.Entity("SRS_TravelDesk.Models.Entities.User", b =>
@@ -217,7 +218,7 @@ namespace SRS_TravelDesk.Migrations
                     b.HasOne("SRS_TravelDesk.Models.Entities.User", "CommentedBy")
                         .WithMany()
                         .HasForeignKey("CommentedById")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("SRS_TravelDesk.Models.Entities.TravelRequest", "TravelRequest")
@@ -244,13 +245,13 @@ namespace SRS_TravelDesk.Migrations
 
             modelBuilder.Entity("SRS_TravelDesk.Models.Entities.TravelRequest", b =>
                 {
-                    b.HasOne("SRS_TravelDesk.Models.Entities.User", "RequestedBy")
+                    b.HasOne("SRS_TravelDesk.Models.Entities.User", "User")
                         .WithMany("TravelRequests")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("RequestedBy");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SRS_TravelDesk.Models.Entities.User", b =>
