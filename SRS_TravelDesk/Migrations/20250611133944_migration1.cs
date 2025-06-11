@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SRS_TravelDesk.Migrations
 {
     /// <inheritdoc />
-    public partial class initialmigration : Migration
+    public partial class migration1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -51,7 +51,7 @@ namespace SRS_TravelDesk.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TravelRequest",
+                name: "TravelRequests",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -64,21 +64,26 @@ namespace SRS_TravelDesk.Migrations
                     BookingType = table.Column<int>(type: "int", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UserId1 = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TravelRequest", x => x.Id);
+                    table.PrimaryKey("PK_TravelRequests", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TravelRequest_user_UserId",
+                        name: "FK_TravelRequests_user_UserId",
                         column: x => x.UserId,
                         principalTable: "user",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_TravelRequests_user_UserId1",
+                        column: x => x.UserId1,
+                        principalTable: "user",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "Comment",
+                name: "Comments",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -87,23 +92,26 @@ namespace SRS_TravelDesk.Migrations
                     CommentedByUserId = table.Column<int>(type: "int", nullable: false),
                     Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CommentedById = table.Column<int>(type: "int", nullable: false)
+                    UserId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Comment", x => x.Id);
+                    table.PrimaryKey("PK_Comments", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Comment_TravelRequest_TravelRequestId",
+                        name: "FK_Comments_TravelRequests_TravelRequestId",
                         column: x => x.TravelRequestId,
-                        principalTable: "TravelRequest",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalTable: "TravelRequests",
+                        principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_Comment_user_CommentedById",
-                        column: x => x.CommentedById,
+                        name: "FK_Comments_user_CommentedByUserId",
+                        column: x => x.CommentedByUserId,
                         principalTable: "user",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Comments_user_UserId",
+                        column: x => x.UserId,
+                        principalTable: "user",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -121,22 +129,27 @@ namespace SRS_TravelDesk.Migrations
                 {
                     table.PrimaryKey("PK_Document", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Document_TravelRequest_TravelRequestId",
+                        name: "FK_Document_TravelRequests_TravelRequestId",
                         column: x => x.TravelRequestId,
-                        principalTable: "TravelRequest",
+                        principalTable: "TravelRequests",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Comment_CommentedById",
-                table: "Comment",
-                column: "CommentedById");
+                name: "IX_Comments_CommentedByUserId",
+                table: "Comments",
+                column: "CommentedByUserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Comment_TravelRequestId",
-                table: "Comment",
+                name: "IX_Comments_TravelRequestId",
+                table: "Comments",
                 column: "TravelRequestId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Comments_UserId",
+                table: "Comments",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Document_TravelRequestId",
@@ -144,9 +157,14 @@ namespace SRS_TravelDesk.Migrations
                 column: "TravelRequestId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TravelRequest_UserId",
-                table: "TravelRequest",
+                name: "IX_TravelRequests_UserId",
+                table: "TravelRequests",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TravelRequests_UserId1",
+                table: "TravelRequests",
+                column: "UserId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_user_RoleId",
@@ -158,13 +176,13 @@ namespace SRS_TravelDesk.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Comment");
+                name: "Comments");
 
             migrationBuilder.DropTable(
                 name: "Document");
 
             migrationBuilder.DropTable(
-                name: "TravelRequest");
+                name: "TravelRequests");
 
             migrationBuilder.DropTable(
                 name: "user");

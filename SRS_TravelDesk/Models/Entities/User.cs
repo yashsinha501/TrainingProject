@@ -16,6 +16,8 @@ namespace SRS_TravelDesk.Models.Entities
 
         public Role Role { get; set; }
         public ICollection<TravelRequest> TravelRequests { get; set; }
+        public ICollection<Comment> Comments { get; set; }
+
     }
 
 }
