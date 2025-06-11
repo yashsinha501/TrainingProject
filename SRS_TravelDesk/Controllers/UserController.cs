@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SRS_TravelDesk.Models.Entities;
 using SRS_TravelDesk.Models.DTO;
 using SRS_TravelDesk.Repo;
+using SRS_TravelDesk.Handlers;
 
 namespace SRS_TravelDesk.Controllers
 {
@@ -68,6 +69,11 @@ namespace SRS_TravelDesk.Controllers
             if (!roleExists)
                 return BadRequest("Invalid RoleId.");
 
+            if (string.IsNullOrWhiteSpace(dto.Email) )
+            {
+                return BadRequest(new { message = "Email is required." });
+            }
+
             var existing = await _userRepo.GetByEmailAsync(dto.Email);
             if (existing != null)
                 return Conflict("Email already exists.");
@@ -81,7 +87,7 @@ namespace SRS_TravelDesk.Controllers
                 Department = dto.Department,
                 ManagerName = dto.ManagerName,
                 RoleId = dto.RoleId,
-                Password = dto.Password
+                Password = PasswordHashHandler.HashPassword(dto.Password ?? ""),
             };
 
             var created = await _userRepo.CreateAsync(user);
@@ -144,8 +150,8 @@ namespace SRS_TravelDesk.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            var user = await _userRepo.AuthenticateAsync(dto.Email, dto.Password);
-            if (user == null) return Unauthorized("Invalid email or password.");
+            var user = await _userRepo.AuthenticateAsync(dto.Email ?? "", dto.Password ?? "");
+            if (user == null || !PasswordHashHandler.VerifyPassword(user.Password ?? "",dto.Password ?? "")) return Unauthorized("Invalid email or password.");
 
             return Ok(new UserResponseDto
             {
