@@ -33,6 +33,9 @@ namespace SRS_TravelDesk.Migrations
                     b.Property<int>("CommentedById")
                         .HasColumnType("int");
 
+                    b.Property<int>("CommentedByUserId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -43,13 +46,16 @@ namespace SRS_TravelDesk.Migrations
                     b.Property<int>("TravelRequestId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("CommentedById");
+                    b.HasIndex("CommentedByUserId");
 
                     b.HasIndex("TravelRequestId");
 
-                    b.ToTable("Comments");
+                    b.ToTable("Comment");
                 });
 
             modelBuilder.Entity("SRS_TravelDesk.Models.Entities.Document", b =>
@@ -159,11 +165,14 @@ namespace SRS_TravelDesk.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("UserId1")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TravelRequests");
+                    b.ToTable("TravelRequest");
                 });
 
             modelBuilder.Entity("SRS_TravelDesk.Models.Entities.User", b =>
@@ -217,14 +226,18 @@ namespace SRS_TravelDesk.Migrations
                     b.HasOne("SRS_TravelDesk.Models.Entities.User", "CommentedBy")
                         .WithMany()
                         .HasForeignKey("CommentedById")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("SRS_TravelDesk.Models.Entities.TravelRequest", "TravelRequest")
                         .WithMany("Comments")
                         .HasForeignKey("TravelRequestId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.HasOne("SRS_TravelDesk.Models.Entities.User", null)
+                        .WithMany("Comments")
+                        .HasForeignKey("UserId");
 
                     b.Navigation("CommentedBy");
 
@@ -244,13 +257,13 @@ namespace SRS_TravelDesk.Migrations
 
             modelBuilder.Entity("SRS_TravelDesk.Models.Entities.TravelRequest", b =>
                 {
-                    b.HasOne("SRS_TravelDesk.Models.Entities.User", "RequestedBy")
+                    b.HasOne("SRS_TravelDesk.Models.Entities.User", "User")
                         .WithMany("TravelRequests")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.Navigation("RequestedBy");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SRS_TravelDesk.Models.Entities.User", b =>
@@ -278,6 +291,8 @@ namespace SRS_TravelDesk.Migrations
 
             modelBuilder.Entity("SRS_TravelDesk.Models.Entities.User", b =>
                 {
+                    b.Navigation("Comments");
+
                     b.Navigation("TravelRequests");
                 });
 #pragma warning restore 612, 618
