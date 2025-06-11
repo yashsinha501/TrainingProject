@@ -1,0 +1,7 @@
+@SRS_TravelDesk_HostAddress = https://localhost:7155
+
+GET {{SRS_TravelDesk_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+
