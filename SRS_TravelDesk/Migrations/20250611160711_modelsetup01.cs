@@ -3,16 +3,18 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace SRS_TravelDesk.Migrations
 {
     /// <inheritdoc />
-    public partial class migration1 : Migration
+    public partial class modelsetup01 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Role",
+                name: "Roles",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -21,11 +23,11 @@ namespace SRS_TravelDesk.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Role", x => x.Id);
+                    table.PrimaryKey("PK_Roles", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "user",
+                name: "Users",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -34,18 +36,18 @@ namespace SRS_TravelDesk.Migrations
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Department = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ManagerName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     RoleId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_user", x => x.Id);
+                    table.PrimaryKey("PK_Users", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_user_Role_RoleId",
+                        name: "FK_Users_Roles_RoleId",
                         column: x => x.RoleId,
-                        principalTable: "Role",
+                        principalTable: "Roles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -71,14 +73,14 @@ namespace SRS_TravelDesk.Migrations
                 {
                     table.PrimaryKey("PK_TravelRequests", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TravelRequests_user_UserId",
+                        name: "FK_TravelRequests_Users_UserId",
                         column: x => x.UserId,
-                        principalTable: "user",
+                        principalTable: "Users",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_TravelRequests_user_UserId1",
+                        name: "FK_TravelRequests_Users_UserId1",
                         column: x => x.UserId1,
-                        principalTable: "user",
+                        principalTable: "Users",
                         principalColumn: "Id");
                 });
 
@@ -103,14 +105,14 @@ namespace SRS_TravelDesk.Migrations
                         principalTable: "TravelRequests",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_Comments_user_CommentedByUserId",
+                        name: "FK_Comments_Users_CommentedByUserId",
                         column: x => x.CommentedByUserId,
-                        principalTable: "user",
+                        principalTable: "Users",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_Comments_user_UserId",
+                        name: "FK_Comments_Users_UserId",
                         column: x => x.UserId,
-                        principalTable: "user",
+                        principalTable: "Users",
                         principalColumn: "Id");
                 });
 
@@ -134,6 +136,17 @@ namespace SRS_TravelDesk.Migrations
                         principalTable: "TravelRequests",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.InsertData(
+                table: "Roles",
+                columns: new[] { "Id", "Name" },
+                values: new object[,]
+                {
+                    { 1, "Administrator" },
+                    { 2, "Manager" },
+                    { 3, "Employee" },
+                    { 4, "TravelHr" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -167,8 +180,8 @@ namespace SRS_TravelDesk.Migrations
                 column: "UserId1");
 
             migrationBuilder.CreateIndex(
-                name: "IX_user_RoleId",
-                table: "user",
+                name: "IX_Users_RoleId",
+                table: "Users",
                 column: "RoleId");
         }
 
@@ -185,10 +198,10 @@ namespace SRS_TravelDesk.Migrations
                 name: "TravelRequests");
 
             migrationBuilder.DropTable(
-                name: "user");
+                name: "Users");
 
             migrationBuilder.DropTable(
-                name: "Role");
+                name: "Roles");
         }
     }
 }

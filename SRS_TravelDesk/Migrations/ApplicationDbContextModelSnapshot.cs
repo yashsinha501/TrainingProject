@@ -30,9 +30,6 @@ namespace SRS_TravelDesk.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CommentedById")
-                        .HasColumnType("int");
-
                     b.Property<int>("CommentedByUserId")
                         .HasColumnType("int");
 
@@ -55,7 +52,9 @@ namespace SRS_TravelDesk.Migrations
 
                     b.HasIndex("TravelRequestId");
 
-                    b.ToTable("Comment");
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Comments");
                 });
 
             modelBuilder.Entity("SRS_TravelDesk.Models.Entities.Document", b =>
@@ -172,7 +171,9 @@ namespace SRS_TravelDesk.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("TravelRequest");
+                    b.HasIndex("UserId1");
+
+                    b.ToTable("TravelRequests");
                 });
 
             modelBuilder.Entity("SRS_TravelDesk.Models.Entities.User", b =>
@@ -225,8 +226,8 @@ namespace SRS_TravelDesk.Migrations
                 {
                     b.HasOne("SRS_TravelDesk.Models.Entities.User", "CommentedBy")
                         .WithMany()
-                        .HasForeignKey("CommentedById")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("CommentedByUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("SRS_TravelDesk.Models.Entities.TravelRequest", "TravelRequest")
@@ -257,13 +258,17 @@ namespace SRS_TravelDesk.Migrations
 
             modelBuilder.Entity("SRS_TravelDesk.Models.Entities.TravelRequest", b =>
                 {
-                    b.HasOne("SRS_TravelDesk.Models.Entities.User", "User")
-                        .WithMany("TravelRequests")
+                    b.HasOne("SRS_TravelDesk.Models.Entities.User", "RequestedBy")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.HasOne("SRS_TravelDesk.Models.Entities.User", null)
+                        .WithMany("TravelRequests")
+                        .HasForeignKey("UserId1");
+
+                    b.Navigation("RequestedBy");
                 });
 
             modelBuilder.Entity("SRS_TravelDesk.Models.Entities.User", b =>

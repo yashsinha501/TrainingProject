@@ -10,7 +10,8 @@ namespace SRS_TravelDesk.Data
         {
         }
 
-        public DbSet<User> user {  get; set; }
+        public DbSet<User> Users {  get; set; }
+        public DbSet<Role> Roles { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<TravelRequest> TravelRequests { get; set; }
 
@@ -34,10 +35,17 @@ namespace SRS_TravelDesk.Data
 
             // TravelRequest → User (if exists)
             modelBuilder.Entity<TravelRequest>()
-                .HasOne(tr => tr.User)
-                .WithMany() // or WithMany(u => u.TravelRequests)
+                .HasOne(tr => tr.RequestedBy)
+                .WithMany() 
                 .HasForeignKey(tr => tr.UserId)
-                .OnDelete(DeleteBehavior.NoAction); // ← FIX THIS TOO IF EXISTS
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Role>().HasData(
+                new Role { Id = 1, Name = "Administrator" },
+                new Role { Id = 2, Name = "Manager" },
+                new Role { Id = 3, Name = "Employee" },
+                new Role { Id = 4, Name = "TravelHr" }
+            );
         }
 
     }
