@@ -1,10 +1,7 @@
-﻿using System.Data;
-
-namespace SRS_TravelDesk.Models.Entities
+﻿namespace SRS_TravelDesk.Models.DTO
 {
-    public class User
+    public class UserRegistrationDto
     {
-        public int Id { get; set; }
         public string EmployeeId { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
@@ -13,10 +10,5 @@ namespace SRS_TravelDesk.Models.Entities
         public string Department { get; set; }
         public string ManagerName { get; set; }
         public int RoleId { get; set; }
-        public Role Role { get; set; }
-        public ICollection<TravelRequest> TravelRequests { get; set; }
-        public ICollection<Comment> Comments { get; set; }
-
     }
-
 }
