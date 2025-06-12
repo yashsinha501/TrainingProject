@@ -6,7 +6,7 @@ namespace SRS_TravelDesk.Repo
     {
         Task<IEnumerable<User>> GetAllAsync();
         Task<User> GetByIdAsync(int id);
-        Task<User> GetByEmailAsync(string email); // ✅ Add this line
+        Task<User> GetByEmailAsync(string email); 
         Task<User> CreateAsync(User user);
         Task<User> UpdateAsync(int id, User user);
         Task<bool> DeleteAsync(int id);

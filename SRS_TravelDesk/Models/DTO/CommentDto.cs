@@ -2,8 +2,11 @@
 {
     public class CommentDto
     {
+        public int Id { get; set; }
         public string Content { get; set; }
-        public string CommentedBy { get; set; }
         public DateTime CreatedAt { get; set; }
+
+        public int CommentedByUserId { get; set; }
+        public string CommentedByName { get; set; }
     }
 }

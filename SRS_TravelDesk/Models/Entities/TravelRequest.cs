@@ -16,7 +16,7 @@
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
 
-        // ✅ Required to match DTO and controller logic
+        
         public DateTime TravelDate { get; set; }
         public string AadharCardNumber { get; set; }
         public string? PassportNumber { get; set; }

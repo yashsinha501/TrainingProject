@@ -4,11 +4,11 @@
     {
         public int Id { get; set; }
         public int TravelRequestId { get; set; }
-        public int CommentedByUserId { get; set; } // match FK in Fluent API
+        public int CommentedByUserId { get; set; } 
         public required string Content { get; set; }
         public DateTime CreatedAt { get; set; }
 
-        public required User CommentedBy { get; set; }
-        public required TravelRequest TravelRequest { get; set; }
+        public  User CommentedBy { get; set; }
+        public  TravelRequest TravelRequest { get; set; }
     }
 }

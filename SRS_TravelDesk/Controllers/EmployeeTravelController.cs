@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using SRS_TravelDesk.Models.DTO;
 using SRS_TravelDesk.Models.Entities;
 using SRS_TravelDesk.Repo;
@@ -16,6 +17,44 @@ namespace SRS_TravelDesk.Controllers
         {
             _travelRepo = travelRepo;
             _userRepo = userRepo;
+        }
+        private TravelRequestDetailDto MapToDto(TravelRequest request)
+        {
+            return new TravelRequestDetailDto
+            {
+                Id = request.Id,
+                UserId = request.UserId,
+                EmployeeName = $"{request.RequestedBy.FirstName} {request.RequestedBy.LastName}",
+                RequestNumber = request.RequestNumber,
+                ProjectName = request.ProjectName,
+                DepartmentName = request.DepartmentName,
+                ReasonForTravelling = request.ReasonForTravelling,
+                BookingType = request.BookingType,
+                Status = request.Status,
+                TravelDate = request.TravelDate,
+                AadharCardNumber = request.AadharCardNumber,
+                PassportNumber = request.PassportNumber,
+                DaysOfStay = request.DaysOfStay,
+                MealRequired = request.MealRequired,
+                MealPreference = request.MealPreference,
+                CreatedDate = request.CreatedDate,
+                UpdatedDate = request.UpdatedDate,
+                Comments = request.Comments?.Select(c => new CommentDto
+                {
+                    Id = c.Id,
+                    Content = c.Content,
+                    CreatedAt = c.CreatedAt,
+                    CommentedByUserId = c.CommentedByUserId,
+                    CommentedByName = c.CommentedBy?.FirstName + " " + c.CommentedBy?.LastName
+                }).ToList() ?? new List<CommentDto>(),
+
+                Documents = request.Documents?.Select(d => new DocumentDto
+                {
+                    Id = d.Id,
+                    FileName = d.FileName,
+                    DocumentType = d.DocumentType.ToString()
+                }).ToList() ?? new List<DocumentDto>()
+            };
         }
 
         [HttpPost("create")]
@@ -63,7 +102,7 @@ namespace SRS_TravelDesk.Controllers
                     return BadRequest("Meal Preference is required for hotel booking.");
             }
 
-            // 🏗️ Create TravelRequest entity
+            //  Create TravelRequest entity
             var request = new TravelRequest
             {
                 UserId = dto.UserId,
@@ -78,7 +117,7 @@ namespace SRS_TravelDesk.Controllers
                 DaysOfStay = dto.DaysOfStay,
                 MealRequired = dto.MealRequired,
                 MealPreference = dto.MealPreference,
-                Status = TravelStatus.Draft,
+                Status = TravelStatus.Submitted,
                 CreatedDate = DateTime.UtcNow
             };
 
@@ -93,7 +132,7 @@ namespace SRS_TravelDesk.Controllers
 
             var created = await _travelRepo.CreateRequestAsync(request, documents);
 
-            return Ok(new { created.Id, created.RequestNumber });
+            return Ok(new { created.Id, created.RequestNumber, Status = created.Status.ToString() });
         }
 
         [HttpGet("my-requests/{userId}")]
@@ -105,11 +144,40 @@ namespace SRS_TravelDesk.Controllers
             {
                 r.Id,
                 r.RequestNumber,
-                r.Status,
+                Status = r.Status.ToString(),
                 r.ProjectName,
                 r.CreatedDate
             }));
         }
+
+        [HttpPut("update/{id}")]
+        public async Task<IActionResult> UpdateRequest(int id, [FromBody] TravelRequestCreateDto dto)
+        {
+            var existing = await _travelRepo.GetRequestByIdAsync(id);
+            if (existing == null)
+                return NotFound("Request not found.");
+
+            if (existing.Status != TravelStatus.ReturnedToEmployee)
+                return BadRequest("Request cannot be edited unless returned by Manager or Travel Admin.");
+
+            // Apply updates
+            existing.ProjectName = dto.ProjectName;
+            existing.DepartmentName = dto.DepartmentName;
+            existing.ReasonForTravelling = dto.ReasonForTravelling;
+            existing.BookingType = dto.BookingType;
+            existing.TravelDate = dto.TravelDate;
+            existing.AadharCardNumber = dto.AadharCardNumber;
+            existing.PassportNumber = dto.PassportNumber;
+            existing.DaysOfStay = dto.DaysOfStay;
+            existing.MealRequired = dto.MealRequired;
+            existing.MealPreference = dto.MealPreference;
+            existing.UpdatedDate = DateTime.UtcNow;
+
+            await _travelRepo.UpdateRequestAsync(existing);
+
+            return Ok("Request updated successfully.");
+        }
+
 
         [HttpDelete("{id}/user/{userId}")]
         public async Task<IActionResult> DeleteDraftRequest(int id, int userId)
@@ -124,5 +192,85 @@ namespace SRS_TravelDesk.Controllers
             var result = await _travelRepo.SubmitRequestAsync(id);
             return result ? Ok("Submitted successfully") : BadRequest("Submit failed");
         }
+
+        [HttpPost("return/{id}")]
+        public async Task<IActionResult> ReturnToEmployee(int id)
+        {
+            var request = await _travelRepo.GetRequestByIdAsync(id);
+            if (request == null || request.Status != TravelStatus.Submitted)
+                return BadRequest("Only submitted requests can be returned.");
+
+            request.Status = TravelStatus.ReturnedToEmployee;
+            request.UpdatedDate = DateTime.UtcNow;
+
+            await _travelRepo.UpdateRequestAsync(request);
+            return Ok("Returned to employee.");
+        }
+
+
+        [HttpPost("update-status")]
+        public async Task<IActionResult> UpdateStatus([FromBody] TravelRequestStatusUpdateDto dto)
+        {
+            var result = await _travelRepo.UpdateRequestStatusAsync(dto);
+            return result ? Ok("Status updated successfully") : BadRequest("Invalid request or transition.");
+        }
+
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllRequests()
+        {
+            var requests = await _travelRepo.GetAllRequestsAsync();
+            var response = requests.Select(MapToDto).ToList();
+            return Ok(response);
+        }
+
+        [HttpGet("approved-by-manager")]
+        public async Task<IActionResult> GetRequestsApprovedByManager()
+        {
+            var requests = await _travelRepo.GetRequestsApprovedByManagerAsync();
+            var response = requests.Select(MapToDto).ToList();
+            return Ok(response);
+        }
+
+
+        [HttpPost("{id}/upload-documents")]
+        public async Task<IActionResult> UploadAdditionalDocuments(int id, [FromBody] List<DocumentUploadDto> newDocuments)
+        {
+            var request = await _travelRepo.GetRequestByIdAsync(id);
+
+            if (request == null)
+                return NotFound("Request not found.");
+
+            if (request.Status != TravelStatus.ReturnedToEmployee)
+                return BadRequest("Documents can only be uploaded when request is returned to employee.");
+
+            if (newDocuments == null || !newDocuments.Any())
+                return BadRequest("No documents provided.");
+
+            var parsedDocs = newDocuments
+                .Where(d => !string.IsNullOrWhiteSpace(d.FileContentBase64) && !string.IsNullOrWhiteSpace(d.DocumentType))
+                .Select(d => new Document
+                {
+                    FileName = d.FileName,
+                    FileContent = Convert.FromBase64String(d.FileContentBase64),
+                    DocumentType = Enum.Parse<DocumentType>(d.DocumentType, ignoreCase: true)
+                    
+                }).ToList();
+
+            await _travelRepo.AddDocumentsAsync(id, parsedDocs); 
+
+            return Ok("Documents uploaded successfully.");
+        }
+
+
+        [HttpGet("by-status")]
+        public async Task<IActionResult> GetRequestsByStatus([FromQuery] TravelStatus status)
+        {
+            var requests = await _travelRepo.GetRequestsByStatusAsync(status);
+            var response = requests.Select(MapToDto).ToList();
+            return Ok(response);
+
+        }
+
+
     }
 }
