@@ -14,6 +14,7 @@ namespace SRS_TravelDesk.Data
         public DbSet<Role> Roles { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<TravelRequest> TravelRequests { get; set; }
+        public DbSet<Document> Documents { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
