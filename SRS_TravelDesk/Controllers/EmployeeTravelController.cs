@@ -39,20 +39,21 @@ namespace SRS_TravelDesk.Controllers
                 MealPreference = request.MealPreference,
                 CreatedDate = request.CreatedDate,
                 UpdatedDate = request.UpdatedDate,
-                Comments = request.Comments.Select(c => new CommentDto
+                Comments = request.Comments?.Select(c => new CommentDto
                 {
                     Id = c.Id,
                     Content = c.Content,
                     CreatedAt = c.CreatedAt,
                     CommentedByUserId = c.CommentedByUserId,
-                    CommentedByName = $"{c.CommentedBy.FirstName} {c.CommentedBy.LastName}"
-                }).ToList(),
-                Documents = request.Documents.Select(d => new DocumentDto
+                    CommentedByName = c.CommentedBy?.FirstName + " " + c.CommentedBy?.LastName
+                }).ToList() ?? new List<CommentDto>(),
+
+                Documents = request.Documents?.Select(d => new DocumentDto
                 {
                     Id = d.Id,
                     FileName = d.FileName,
                     DocumentType = d.DocumentType.ToString()
-                }).ToList()
+                }).ToList() ?? new List<DocumentDto>()
             };
         }
 
@@ -252,7 +253,7 @@ namespace SRS_TravelDesk.Controllers
                     FileName = d.FileName,
                     FileContent = Convert.FromBase64String(d.FileContentBase64),
                     DocumentType = Enum.Parse<DocumentType>(d.DocumentType, ignoreCase: true)
-                    // TravelRequestId is set in the repo
+                    
                 }).ToList();
 
             await _travelRepo.AddDocumentsAsync(id, parsedDocs); 

@@ -25,15 +25,13 @@ namespace SRS_TravelDesk.Data
                 .HasOne(c => c.CommentedBy)
                 .WithMany()
                 .HasForeignKey(c => c.CommentedByUserId)
-                .OnDelete(DeleteBehavior.NoAction); // ← VERY IMPORTANT
-
+                .OnDelete(DeleteBehavior.NoAction); 
             // Comment → TravelRequest
             modelBuilder.Entity<Comment>()
                 .HasOne(c => c.TravelRequest)
                 .WithMany(tr => tr.Comments)
                 .HasForeignKey(c => c.TravelRequestId)
-                .OnDelete(DeleteBehavior.NoAction); // ← SAFER
-
+                .OnDelete(DeleteBehavior.NoAction);
             // TravelRequest → User (if exists)
             modelBuilder.Entity<TravelRequest>()
                 .HasOne(tr => tr.RequestedBy)

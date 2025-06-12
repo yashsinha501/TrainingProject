@@ -86,8 +86,7 @@ namespace SRS_TravelDesk.Repo
             request.Status = TravelStatus.Submitted;
             request.UpdatedDate = DateTime.UtcNow;
 
-            // Optional: send notification to manager (you can implement this later)
-            // await _emailService.SendToManager(request);
+           
 
             await _context.SaveChangesAsync();
             return true;
@@ -198,6 +197,7 @@ namespace SRS_TravelDesk.Repo
                 .Include(r => r.Documents)
                 .Include(r => r.Comments)
                     .ThenInclude(c => c.CommentedBy)
+                .Include(r => r.RequestedBy)
                 .Where(r =>r.Status == status)
                 .ToListAsync();
         }
