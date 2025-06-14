@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SRS_TravelDesk.Models.Entities;
 using SRS_TravelDesk.Models.DTO;
+using SRS_TravelDesk.Models.Entities;
 using SRS_TravelDesk.Repo;
+using System.Security.Claims;
 
 namespace SRS_TravelDesk.Controllers
 {
@@ -141,24 +143,22 @@ namespace SRS_TravelDesk.Controllers
             return deleted ? NoContent() : NotFound();
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDto dto)
+        [HttpGet("secure-data")]
+        [Authorize]
+        public IActionResult GetSecureData()
         {
-            var user = await _userRepo.AuthenticateAsync(dto.Email, dto.Password);
-            if (user == null) return Unauthorized("Invalid email or password.");
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var username = User.FindFirstValue(ClaimTypes.Name);
+            var role = User.FindFirstValue(ClaimTypes.Role);
 
-            return Ok(new UserResponseDto
+            return Ok(new
             {
-                Id = user.Id,
-                EmployeeId = user.EmployeeId,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email,
-                Department = user.Department,
-                ManagerName = user.ManagerName,
-                RoleName = user.Role?.Name
+                Id = userId,
+                Username = username,
+                Role = role
             });
         }
+
     }
 }
 
