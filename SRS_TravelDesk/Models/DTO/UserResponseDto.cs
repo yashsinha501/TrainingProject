@@ -8,7 +8,8 @@
         public string LastName { get; set; }
         public string Email { get; set; }
         public string Department { get; set; }
-        public string ManagerName { get; set; }
+        public ManagerDto Manager { get; set; }
+
         public string RoleName { get; set; }
     }
 }

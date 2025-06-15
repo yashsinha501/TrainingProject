@@ -17,12 +17,19 @@ namespace SRS_TravelDesk.Repo
 
         public async Task<IEnumerable<User>> GetAllAsync()
         {
-            return await _context.Users.Include(u => u.Role).ToListAsync();
+            return await _context.Users
+       .Include(u => u.Role)
+       .Include(u => u.Manager)
+           .ThenInclude(m => m.Role)
+       .ToListAsync();
         }
 
         public async Task<User> GetByIdAsync(int id)
         {
-            return await _context.Users.Include(u => u.Role)
+            return await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.Manager)
+                    .ThenInclude(m => m.Role)
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 
@@ -43,7 +50,11 @@ namespace SRS_TravelDesk.Repo
 
         public async Task<User> UpdateAsync(int id, User updatedUser)
         {
-            var existing = await _context.Users.FindAsync(id);
+            var existing = await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.Manager)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
             if (existing == null) return null;
 
             existing.EmployeeId = updatedUser.EmployeeId;
@@ -51,15 +62,16 @@ namespace SRS_TravelDesk.Repo
             existing.LastName = updatedUser.LastName;
             existing.Email = updatedUser.Email;
             existing.Department = updatedUser.Department;
-            existing.ManagerName = updatedUser.ManagerName;
+            existing.ManagerId = updatedUser.ManagerId;
             existing.RoleId = updatedUser.RoleId;
 
             if (!string.IsNullOrWhiteSpace(updatedUser.Password))
-                existing.Password = HashPassword(updatedUser.Password);
+                existing.Password = HashPassword(updatedUser.Password); 
 
             await _context.SaveChangesAsync();
             return existing;
         }
+
 
         public async Task<bool> DeleteAsync(int id)
         {

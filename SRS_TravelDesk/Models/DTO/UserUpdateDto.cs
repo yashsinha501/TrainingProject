@@ -8,7 +8,7 @@
         public string Email { get; set; }
         public string NewPassword { get; set; }
         public string Department { get; set; }
-        public string ManagerName { get; set; }
+        public int? ManagerId { get; set; }
         public int RoleId { get; set; }
     }
 }

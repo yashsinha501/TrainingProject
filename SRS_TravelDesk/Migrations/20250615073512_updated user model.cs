@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SRS_TravelDesk.Migrations
 {
     /// <inheritdoc />
-    public partial class modelsetup01 : Migration
+    public partial class updatedusermodel : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -38,7 +38,7 @@ namespace SRS_TravelDesk.Migrations
                     Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Department = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ManagerName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ManagerId = table.Column<int>(type: "int", nullable: true),
                     RoleId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -50,6 +50,12 @@ namespace SRS_TravelDesk.Migrations
                         principalTable: "Roles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Users_Users_ManagerId",
+                        column: x => x.ManagerId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -67,6 +73,12 @@ namespace SRS_TravelDesk.Migrations
                     Status = table.Column<int>(type: "int", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    TravelDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    AadharCardNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PassportNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DaysOfStay = table.Column<int>(type: "int", nullable: true),
+                    MealRequired = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MealPreference = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserId1 = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
@@ -117,21 +129,21 @@ namespace SRS_TravelDesk.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Document",
+                name: "Documents",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TravelRequestId = table.Column<int>(type: "int", nullable: false),
                     FileName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    FilePath = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FileContent = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
                     DocumentType = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Document", x => x.Id);
+                    table.PrimaryKey("PK_Documents", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Document_TravelRequests_TravelRequestId",
+                        name: "FK_Documents_TravelRequests_TravelRequestId",
                         column: x => x.TravelRequestId,
                         principalTable: "TravelRequests",
                         principalColumn: "Id",
@@ -149,6 +161,11 @@ namespace SRS_TravelDesk.Migrations
                     { 4, "TravelHr" }
                 });
 
+            migrationBuilder.InsertData(
+                table: "Users",
+                columns: new[] { "Id", "Department", "Email", "EmployeeId", "FirstName", "LastName", "ManagerId", "Password", "RoleId" },
+                values: new object[] { 1, "Administration", "admin@srs.com", "EMP-0001", "Admin", "User", null, "6G94qKPK8LYNjnTllCqm2G3BUM08AzOK7yW30tfjrMc=", 1 });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Comments_CommentedByUserId",
                 table: "Comments",
@@ -165,8 +182,8 @@ namespace SRS_TravelDesk.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Document_TravelRequestId",
-                table: "Document",
+                name: "IX_Documents_TravelRequestId",
+                table: "Documents",
                 column: "TravelRequestId");
 
             migrationBuilder.CreateIndex(
@@ -178,6 +195,11 @@ namespace SRS_TravelDesk.Migrations
                 name: "IX_TravelRequests_UserId1",
                 table: "TravelRequests",
                 column: "UserId1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_ManagerId",
+                table: "Users",
+                column: "ManagerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_RoleId",
@@ -192,7 +214,7 @@ namespace SRS_TravelDesk.Migrations
                 name: "Comments");
 
             migrationBuilder.DropTable(
-                name: "Document");
+                name: "Documents");
 
             migrationBuilder.DropTable(
                 name: "TravelRequests");
