@@ -1,4 +1,4 @@
-﻿namespace SRS_TravelDesk.Models.DTO
+namespace SRS_TravelDesk.Models.DTO
 {
     public class UserRegistrationDto
     {
@@ -9,6 +9,7 @@
         public string Password { get; set; }
         public string Department { get; set; }
         public int? ManagerId { get; set; }
+
         public int RoleId { get; set; }
     }
 }

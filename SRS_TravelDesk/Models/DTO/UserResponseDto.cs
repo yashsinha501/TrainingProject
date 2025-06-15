@@ -11,5 +11,6 @@
         public ManagerDto Manager { get; set; }
 
         public string RoleName { get; set; }
+
     }
 }

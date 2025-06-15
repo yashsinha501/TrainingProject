@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SRS_TravelDesk.Data;
 
@@ -11,9 +12,11 @@ using SRS_TravelDesk.Data;
 namespace SRS_TravelDesk.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250611232437_initial migrations")]
+    partial class initialmigrations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -68,11 +71,11 @@ namespace SRS_TravelDesk.Migrations
                     b.Property<int>("DocumentType")
                         .HasColumnType("int");
 
-                    b.Property<byte[]>("FileContent")
-                        .IsRequired()
-                        .HasColumnType("varbinary(max)");
-
                     b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FilePath")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -83,7 +86,7 @@ namespace SRS_TravelDesk.Migrations
 
                     b.HasIndex("TravelRequestId");
 
-                    b.ToTable("Documents");
+                    b.ToTable("Document");
                 });
 
             modelBuilder.Entity("SRS_TravelDesk.Models.Entities.Role", b =>
@@ -133,26 +136,14 @@ namespace SRS_TravelDesk.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AadharCardNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("BookingType")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("DaysOfStay")
-                        .HasColumnType("int");
-
-                    b.Property<string>("MealPreference")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MealRequired")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PassportNumber")
+                    b.Property<string>("DepartmentName")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ProjectName")
@@ -163,11 +154,12 @@ namespace SRS_TravelDesk.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("RequestNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
-
-                    b.Property<DateTime>("TravelDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime2");
@@ -210,8 +202,8 @@ namespace SRS_TravelDesk.Migrations
                     b.Property<string>("LastName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("ManagerId")
-                        .HasColumnType("int");
+                    b.Property<string>("ManagerName")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Password")
                         .HasColumnType("nvarchar(max)");
@@ -221,24 +213,9 @@ namespace SRS_TravelDesk.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ManagerId");
-
                     b.HasIndex("RoleId");
 
                     b.ToTable("Users");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Department = "Administration",
-                            Email = "admin@srs.com",
-                            EmployeeId = "EMP-0001",
-                            FirstName = "Admin",
-                            LastName = "User",
-                            Password = "6G94qKPK8LYNjnTllCqm2G3BUM08AzOK7yW30tfjrMc=",
-                            RoleId = 1
-                        });
                 });
 
             modelBuilder.Entity("SRS_TravelDesk.Models.Entities.Comment", b =>
@@ -292,18 +269,11 @@ namespace SRS_TravelDesk.Migrations
 
             modelBuilder.Entity("SRS_TravelDesk.Models.Entities.User", b =>
                 {
-                    b.HasOne("SRS_TravelDesk.Models.Entities.User", "Manager")
-                        .WithMany("Subordinates")
-                        .HasForeignKey("ManagerId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("SRS_TravelDesk.Models.Entities.Role", "Role")
                         .WithMany("Users")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Manager");
 
                     b.Navigation("Role");
                 });
@@ -323,8 +293,6 @@ namespace SRS_TravelDesk.Migrations
             modelBuilder.Entity("SRS_TravelDesk.Models.Entities.User", b =>
                 {
                     b.Navigation("Comments");
-
-                    b.Navigation("Subordinates");
 
                     b.Navigation("TravelRequests");
                 });

@@ -1,4 +1,4 @@
-﻿namespace SRS_TravelDesk.Models.DTO
+namespace SRS_TravelDesk.Models.DTO
 {
     public class LoginResponseDto
     {
