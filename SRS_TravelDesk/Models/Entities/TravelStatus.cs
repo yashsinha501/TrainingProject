@@ -8,7 +8,8 @@
         ReturnedToManager,
         ApprovedByManager,
         BookedByAdmin,
-        Closed
+        Closed,
+        Disapprove
     }
 
 }

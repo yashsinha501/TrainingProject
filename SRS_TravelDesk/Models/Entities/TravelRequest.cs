@@ -1,13 +1,16 @@
-﻿namespace SRS_TravelDesk.Models.Entities
+﻿using SRS_TravelDesk.Models.DTO;
+using SRS_TravelDesk.Models.Entities;
+
+
+namespace SRS_TravelDesk.Models.Entities
 {
     public class TravelRequest
     {
         public int Id { get; set; }
-        public string RequestNumber { get; set; }
+
         public int UserId { get; set; }
 
-        public string ProjectName { get; set; }
-        public string DepartmentName { get; set; }
+        public string ProjectName { get; set; }      
         public string ReasonForTravelling { get; set; }
 
         public BookingType BookingType { get; set; }
@@ -15,9 +18,8 @@
 
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
-
-        
         public DateTime TravelDate { get; set; }
+
         public string AadharCardNumber { get; set; }
         public string? PassportNumber { get; set; }
         public int? DaysOfStay { get; set; }

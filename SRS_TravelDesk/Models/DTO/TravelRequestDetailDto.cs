@@ -6,26 +6,24 @@ namespace SRS_TravelDesk.Models.DTO
     {
         public int Id { get; set; }
         public int UserId { get; set; }
+   
         public string EmployeeName { get; set; }
+        public string Department { get; set; }        // from user
+        public string ProjectName { get; set; }       // from travel request
 
-        public string RequestNumber { get; set; }
-        public string ProjectName { get; set; }
-        public string DepartmentName { get; set; }
         public string ReasonForTravelling { get; set; }
-
-        public BookingType BookingType { get; set; }
-        public TravelStatus Status { get; set; }
-
-        public DateTime TravelDate { get; set; }
+        public string BookingType { get; set; }
+        public string Status { get; set; }
+       
         public string AadharCardNumber { get; set; }
         public string? PassportNumber { get; set; }
-
         public int? DaysOfStay { get; set; }
-        public string? MealRequired { get; set; }      // Lunch, Dinner, Both
-        public string? MealPreference { get; set; }    // Veg / Non-Veg
+        public string? MealRequired { get; set; }
+        public string? MealPreference { get; set; }
 
-        public DateTime CreatedDate { get; set; }
-        public DateTime? UpdatedDate { get; set; }
+        public string TravelDate { get; set; }
+        public string CreatedDate { get; set; }
+        public string? UpdatedDate { get; set; }
 
         public List<CommentDto> Comments { get; set; }
         public List<DocumentDto> Documents { get; set; }

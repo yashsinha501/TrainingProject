@@ -21,6 +21,8 @@ namespace SRS_TravelDesk.Controllers
             _userRepo = userRepo;
             _roleRepo = roleRepo;
         }
+
+        [Authorize(Roles = "Administrator")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -50,7 +52,7 @@ namespace SRS_TravelDesk.Controllers
             return Ok(response);
         }
 
-
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
@@ -81,6 +83,7 @@ namespace SRS_TravelDesk.Controllers
             return Ok(response);
         }
 
+        [Authorize(Roles = "Administrator")]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegistrationDto dto)
         {
@@ -99,8 +102,12 @@ namespace SRS_TravelDesk.Controllers
             if (dto.ManagerId != null)
             {
                 manager = await _userRepo.GetByIdAsync(dto.ManagerId.Value);
+
                 if (manager == null)
                     return BadRequest("ManagerId is invalid.");
+
+                if (manager.RoleId != 2)
+                    return BadRequest("The provided ManagerId does not belong to a user with the Manager role.");
             }
 
             // Create user
@@ -145,16 +152,44 @@ namespace SRS_TravelDesk.Controllers
             });
         }
 
-
+        [Authorize(Roles = "Administrator")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] UserUpdateDto dto)
         {
-            // Optional: Validate manager ID if needed
+            //validate user
+            var existing =  await _userRepo.GetByIdAsync(id);
+
+            if(existing == null)
+            {
+                return BadRequest("User Not Found.");
+            }
+
+            // Validate role
+            var roleExists = await _roleRepo.RoleExistsAsync(dto.RoleId);
+
+            if (!roleExists)
+                return BadRequest("Invalid RoleId.");
+
+            // Check for duplicate email
+            var user = await _userRepo.GetByEmailAsync(dto.Email);
+
+            if (user != null)
+            {
+                if (user.Id != existing.Id && user.Email == dto.Email)
+                {
+                    return Conflict("Email already exists.");
+                }
+            }
+            User manager = null;
             if (dto.ManagerId != null)
             {
-                var manager = await _userRepo.GetByIdAsync(dto.ManagerId.Value);
+                manager = await _userRepo.GetByIdAsync(dto.ManagerId.Value);
+
                 if (manager == null)
-                    return BadRequest("Invalid ManagerId.");
+                    return BadRequest("ManagerId is invalid.");
+
+                if (manager.RoleId != 2)
+                    return BadRequest("The provided ManagerId does not belong to a user with the Manager role.");
             }
 
             var updatedUser = new User
@@ -199,7 +234,7 @@ namespace SRS_TravelDesk.Controllers
             return Ok(dtoResponse);
         }
 
-
+        [Authorize(Roles = "Administrator")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
