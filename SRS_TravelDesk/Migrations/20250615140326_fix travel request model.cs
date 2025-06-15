@@ -5,7 +5,7 @@
 namespace SRS_TravelDesk.Migrations
 {
     /// <inheritdoc />
-    public partial class updatedcommentsmodel : Migration
+    public partial class fixtravelrequestmodel : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

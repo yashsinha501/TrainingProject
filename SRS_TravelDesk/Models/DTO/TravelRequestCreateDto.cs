@@ -6,7 +6,7 @@ namespace SRS_TravelDesk.Models.DTO
     {
         public int UserId { get; set; }
         public string ProjectName { get; set; }
-        public string DepartmentName { get; set; }
+        
         public string ReasonForTravelling { get; set; }
 
         public BookingType BookingType { get; set; }
@@ -16,8 +16,8 @@ namespace SRS_TravelDesk.Models.DTO
         public string? PassportNumber { get; set; }
 
         public int? DaysOfStay { get; set; }
-        public string? MealRequired { get; set; }      // Lunch, Dinner, Both
-        public string? MealPreference { get; set; }    // Veg / Non-Veg
+        public string? MealRequired { get; set; }    
+        public string? MealPreference { get; set; }   
 
         public List<DocumentUploadDto> Documents { get; set; } = new();
     }

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SRS_TravelDesk.Models.DTO;
 using SRS_TravelDesk.Repo;
+using SRS_TravelDesk.Services;
 
 namespace SRS_TravelDesk.Controllers
 {
@@ -10,10 +11,11 @@ namespace SRS_TravelDesk.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
-
-        public AuthController(IUserRepository userRepository)
+        private readonly JwtService _jwtService;
+        public AuthController(IUserRepository userRepository, JwtService jwtService)
         {
             _userRepository = userRepository;
+            _jwtService = jwtService;
         }
 
         [HttpPost("login")]
@@ -34,12 +36,13 @@ namespace SRS_TravelDesk.Controllers
                     message = "Please enter the correct Email & Password"
                 });
             }
-
+            var token = _jwtService.GenerateToken(user);
             return Ok(new LoginResponseDto
             {
                 UserId = user.Id,
                 FullName = $"{user.FirstName} {user.LastName}",
-                RoleName = user.Role?.Name
+                RoleName = user.Role?.Name,
+                Token = token
             });
         }
     }

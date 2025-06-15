@@ -12,12 +12,20 @@ namespace SRS_TravelDesk.Repo
         Task<bool> SubmitRequestAsync(int requestId);
         Task<bool> UpdateRequestAsync(TravelRequest updatedRequest);
 
-        Task<bool> UpdateRequestStatusAsync(TravelRequestStatusUpdateDto dto);
+        Task<bool> UpdateStatusByManagerAsync(TravelRequestStatusUpdateDto dto);
+        Task<bool> UpdateStatusByTravelHrAsync(TravelRequestStatusUpdateDto dto);
         Task<IEnumerable<TravelRequest>> GetAllRequestsAsync();
         Task<IEnumerable<TravelRequest>> GetRequestsApprovedByManagerAsync();
 
         Task AddDocumentsAsync(int travelRequestId, List<Document> newDocuments);
         Task<IEnumerable<TravelRequest>> GetRequestsByStatusAsync(TravelStatus status);
-    }
 
+        Task<IEnumerable<TravelRequest>> GetPendingRequestsForManagerAsync(int managerId);
+
+        Task<bool> BookTravelAsync(int requestId, TravelHrBookingDto dto, int updatedByUserId);
+        Task<bool> ReturnToManagerAsync(int requestId, string? comment, int updatedByUserId);
+        Task<bool> ReturnToEmployeeAsync(int requestId, string? comment, int updatedByUserId);
+        Task<IEnumerable<TravelRequest>> GetDisapprovedAndClosedRequestsAsync(int userId);
+
+    }
 }

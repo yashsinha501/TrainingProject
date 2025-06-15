@@ -12,8 +12,8 @@ using SRS_TravelDesk.Data;
 namespace SRS_TravelDesk.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250611194038_updated travelrequest entity")]
-    partial class updatedtravelrequestentity
+    [Migration("20250615073512_updated user model")]
+    partial class updatedusermodel
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -226,9 +226,8 @@ namespace SRS_TravelDesk.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ManagerName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("ManagerId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -239,9 +238,24 @@ namespace SRS_TravelDesk.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ManagerId");
+
                     b.HasIndex("RoleId");
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Department = "Administration",
+                            Email = "admin@srs.com",
+                            EmployeeId = "EMP-0001",
+                            FirstName = "Admin",
+                            LastName = "User",
+                            Password = "6G94qKPK8LYNjnTllCqm2G3BUM08AzOK7yW30tfjrMc=",
+                            RoleId = 1
+                        });
                 });
 
             modelBuilder.Entity("SRS_TravelDesk.Models.Entities.Comment", b =>
@@ -295,11 +309,18 @@ namespace SRS_TravelDesk.Migrations
 
             modelBuilder.Entity("SRS_TravelDesk.Models.Entities.User", b =>
                 {
+                    b.HasOne("SRS_TravelDesk.Models.Entities.User", "Manager")
+                        .WithMany("Subordinates")
+                        .HasForeignKey("ManagerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("SRS_TravelDesk.Models.Entities.Role", "Role")
                         .WithMany("Users")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Manager");
 
                     b.Navigation("Role");
                 });
@@ -319,6 +340,8 @@ namespace SRS_TravelDesk.Migrations
             modelBuilder.Entity("SRS_TravelDesk.Models.Entities.User", b =>
                 {
                     b.Navigation("Comments");
+
+                    b.Navigation("Subordinates");
 
                     b.Navigation("TravelRequests");
                 });

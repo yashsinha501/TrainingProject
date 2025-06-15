@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using SRS_TravelDesk.Models.Entities;
+
 using SRS_TravelDesk.Models.DTO;
+using SRS_TravelDesk.Models.Entities;
 using SRS_TravelDesk.Repo;
-using SRS_TravelDesk.Handlers;
+using System.Security.Claims;
 
 namespace SRS_TravelDesk.Controllers
 {
@@ -21,6 +22,7 @@ namespace SRS_TravelDesk.Controllers
             _roleRepo = roleRepo;
         }
 
+        [Authorize(Roles = "Administrator")]
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -34,50 +36,81 @@ namespace SRS_TravelDesk.Controllers
                 LastName = u.LastName,
                 Email = u.Email,
                 Department = u.Department,
-                ManagerName = u.ManagerName,
-                RoleName = u.Role?.Name
+                RoleName = u.Role?.Name,
+                Manager = u.Manager != null ? new ManagerDto
+                {
+                    Id = u.Manager.Id,
+                    EmployeeId = u.Manager.EmployeeId,
+                    FirstName = u.Manager.FirstName,
+                    LastName = u.Manager.LastName,
+                    Email = u.Manager.Email,
+                    Department = u.Manager.Department,
+                    RoleName = u.Manager.Role?.Name
+                } : null
             });
 
             return Ok(response);
         }
 
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            var user = await _userRepo.GetByIdAsync(id);
-            if (user == null) return NotFound();
+            var u = await _userRepo.GetByIdAsync(id);
+            if (u == null) return NotFound();
 
-            var dto = new UserResponseDto
+            var response =  new UserResponseDto
             {
-                Id = user.Id,
-                EmployeeId = user.EmployeeId,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email,
-                Department = user.Department,
-                ManagerName = user.ManagerName,
-                RoleName = user.Role?.Name
+                Id = u.Id,
+                EmployeeId = u.EmployeeId,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                Email = u.Email,
+                Department = u.Department,
+                RoleName = u.Role?.Name,
+                Manager = u.Manager != null ? new ManagerDto
+                {
+                    Id = u.Manager.Id,
+                    EmployeeId = u.Manager.EmployeeId,
+                    FirstName = u.Manager.FirstName,
+                    LastName = u.Manager.LastName,
+                    Email = u.Manager.Email,
+                    Department = u.Manager.Department,
+                    RoleName = u.Manager.Role?.Name
+                } : null
             };
 
-            return Ok(dto);
+            return Ok(response);
         }
 
+        [Authorize(Roles = "Administrator")]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegistrationDto dto)
         {
+            // Validate role
             var roleExists = await _roleRepo.RoleExistsAsync(dto.RoleId);
             if (!roleExists)
                 return BadRequest("Invalid RoleId.");
 
-            if (string.IsNullOrWhiteSpace(dto.Email) )
-            {
-                return BadRequest(new { message = "Email is required." });
-            }
-
+            // Check for duplicate email
             var existing = await _userRepo.GetByEmailAsync(dto.Email);
             if (existing != null)
                 return Conflict("Email already exists.");
 
+            
+            User manager = null;
+            if (dto.ManagerId != null)
+            {
+                manager = await _userRepo.GetByIdAsync(dto.ManagerId.Value);
+
+                if (manager == null)
+                    return BadRequest("ManagerId is invalid.");
+
+                if (manager.RoleId != 2)
+                    return BadRequest("The provided ManagerId does not belong to a user with the Manager role.");
+            }
+
+            // Create user
             var user = new User
             {
                 EmployeeId = dto.EmployeeId,
@@ -85,14 +118,17 @@ namespace SRS_TravelDesk.Controllers
                 LastName = dto.LastName,
                 Email = dto.Email,
                 Department = dto.Department,
-                ManagerName = dto.ManagerName,
                 RoleId = dto.RoleId,
-                Password = PasswordHashHandler.HashPassword(dto.Password ?? ""),
+                ManagerId = dto.ManagerId,
+                Password = dto.Password 
             };
 
             var created = await _userRepo.CreateAsync(user);
             if (created == null)
                 return StatusCode(500, "Failed to create user.");
+
+            
+            created = await _userRepo.GetByIdAsync(created.Id);
 
             return CreatedAtAction(nameof(Get), new { id = created.Id }, new UserResponseDto
             {
@@ -102,14 +138,60 @@ namespace SRS_TravelDesk.Controllers
                 LastName = created.LastName,
                 Email = created.Email,
                 Department = created.Department,
-                ManagerName = created.ManagerName,
-                RoleName = created.Role?.Name
+                RoleName = created.Role?.Name,
+                Manager = created.Manager != null ? new ManagerDto
+                {
+                    Id = created.Manager.Id,
+                    EmployeeId = created.Manager.EmployeeId,
+                    FirstName = created.Manager.FirstName,
+                    LastName = created.Manager.LastName,
+                    Email = created.Manager.Email,
+                    Department = created.Manager.Department,
+                    RoleName = created.Manager.Role?.Name
+                } : null
             });
         }
 
+        [Authorize(Roles = "Administrator")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] UserUpdateDto dto)
         {
+            //validate user
+            var existing =  await _userRepo.GetByIdAsync(id);
+
+            if(existing == null)
+            {
+                return BadRequest("User Not Found.");
+            }
+
+            // Validate role
+            var roleExists = await _roleRepo.RoleExistsAsync(dto.RoleId);
+
+            if (!roleExists)
+                return BadRequest("Invalid RoleId.");
+
+            // Check for duplicate email
+            var user = await _userRepo.GetByEmailAsync(dto.Email);
+
+            if (user != null)
+            {
+                if (user.Id != existing.Id && user.Email == dto.Email)
+                {
+                    return Conflict("Email already exists.");
+                }
+            }
+            User manager = null;
+            if (dto.ManagerId != null)
+            {
+                manager = await _userRepo.GetByIdAsync(dto.ManagerId.Value);
+
+                if (manager == null)
+                    return BadRequest("ManagerId is invalid.");
+
+                if (manager.RoleId != 2)
+                    return BadRequest("The provided ManagerId does not belong to a user with the Manager role.");
+            }
+
             var updatedUser = new User
             {
                 EmployeeId = dto.EmployeeId,
@@ -117,13 +199,16 @@ namespace SRS_TravelDesk.Controllers
                 LastName = dto.LastName,
                 Email = dto.Email,
                 Department = dto.Department,
-                ManagerName = dto.ManagerName,
+                ManagerId = dto.ManagerId,
                 RoleId = dto.RoleId,
                 Password = dto.NewPassword
             };
 
             var updated = await _userRepo.UpdateAsync(id, updatedUser);
             if (updated == null) return NotFound();
+
+            
+            updated = await _userRepo.GetByIdAsync(id);
 
             var dtoResponse = new UserResponseDto
             {
@@ -133,13 +218,23 @@ namespace SRS_TravelDesk.Controllers
                 LastName = updated.LastName,
                 Email = updated.Email,
                 Department = updated.Department,
-                ManagerName = updated.ManagerName,
-                RoleName = updated.Role?.Name
+                RoleName = updated.Role?.Name,
+                Manager = updated.Manager != null ? new ManagerDto
+                {
+                    Id = updated.Manager.Id,
+                    EmployeeId = updated.Manager.EmployeeId,
+                    FirstName = updated.Manager.FirstName,
+                    LastName = updated.Manager.LastName,
+                    Email = updated.Manager.Email,
+                    Department = updated.Manager.Department,
+                    RoleName = updated.Manager.Role?.Name
+                } : null
             };
 
             return Ok(dtoResponse);
         }
 
+        [Authorize(Roles = "Administrator")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -147,24 +242,22 @@ namespace SRS_TravelDesk.Controllers
             return deleted ? NoContent() : NotFound();
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDto dto)
+        [HttpGet("secure-data")]
+        [Authorize]
+        public IActionResult GetSecureData()
         {
-            var user = await _userRepo.AuthenticateAsync(dto.Email ?? "", dto.Password ?? "");
-            if (user == null || !PasswordHashHandler.VerifyPassword(user.Password ?? "",dto.Password ?? "")) return Unauthorized("Invalid email or password.");
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var username = User.FindFirstValue(ClaimTypes.Name);
+            var role = User.FindFirstValue(ClaimTypes.Role);
 
-            return Ok(new UserResponseDto
+            return Ok(new
             {
-                Id = user.Id,
-                EmployeeId = user.EmployeeId,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email,
-                Department = user.Department,
-                ManagerName = user.ManagerName,
-                RoleName = user.Role?.Name
+                Id = userId,
+                Username = username,
+                Role = role
             });
         }
+
     }
 }
 
