@@ -8,7 +8,15 @@ using System;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
 //jwt service
 builder.Services.AddAuthentication(options =>
 {
@@ -53,6 +61,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Apply the CORS middleware
+app.UseCors();
 
 app.UseHttpsRedirection();
 
