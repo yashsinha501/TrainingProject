@@ -214,10 +214,53 @@ namespace SRS_TravelDesk.Repo
                 .Include(r => r.RequestedBy)
                 .Include(r => r.Documents)
                 .Include(r => r.Comments)
-                .Where(r => (r.Status == TravelStatus.Submitted || r.Status == TravelStatus.ReturnedToManager) && r.RequestedBy.ManagerId == managerId)
+                .Where(r => (r.Status == TravelStatus.Submitted) && r.RequestedBy.ManagerId == managerId)
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<TravelRequest>> GetApprovedRequestsViaManagerAsync(int managerId)
+        {
+            return await _context.TravelRequests
+                .Include(r => r.RequestedBy)
+                .Include(r => r.Documents)
+                .Include(r => r.Comments)
+                .Where(r => r.Status == TravelStatus.ApprovedByManager && r.RequestedBy.ManagerId == managerId)
+                .ToListAsync();
+        }
+        public async Task<IEnumerable<TravelRequest>> GetRequestsReturnedToManagerAsync(int managerId)
+        {
+            return await _context.TravelRequests
+                .Where(r => r.Status == TravelStatus.ReturnedToManager && r.RequestedBy.ManagerId == managerId)
+                .Include(r => r.Comments)
+                    .ThenInclude(c => c.CommentedBy)
+                .Include(r => r.Documents)
+                .Include(r => r.RequestedBy)
+                .ToListAsync();
+        }
+
+       
+
+        public async Task<IEnumerable<TravelRequest>> GetRequestsReturnedToEmployeeAsync(int employeeId)
+        {
+            return await _context.TravelRequests
+                .Where(r => r.Status == TravelStatus.ReturnedToEmployee && r.UserId == employeeId)
+                .Include(r => r.Comments)
+                    .ThenInclude(c => c.CommentedBy)
+                .Include(r => r.Documents)
+                .Include(r => r.RequestedBy)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<TravelRequest>> GetBookedRequestsAsync()
+        {
+            return await _context.TravelRequests
+                .Where(r => r.Status == TravelStatus.BookedByAdmin)
+                .Include(r => r.RequestedBy)
+                .Include(r => r.Documents)
+                .Include(r => r.Comments)
+                    .ThenInclude(c => c.CommentedBy)
+                .ToListAsync();
+        }
         public async Task AddDocumentsAsync(int travelRequestId, List<Document> newDocuments)
         {
             // Get all existing documents for the request

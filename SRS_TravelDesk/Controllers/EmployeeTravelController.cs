@@ -212,6 +212,7 @@ namespace SRS_TravelDesk.Controllers
             existing.MealRequired = dto.MealRequired;
             existing.MealPreference = dto.MealPreference;
             existing.UpdatedDate = DateTime.UtcNow;
+            existing.Status = TravelStatus.Submitted;
 
             // Update documents (replace old with new)
             if (dto.Documents != null && dto.Documents.Any())
@@ -259,7 +260,7 @@ namespace SRS_TravelDesk.Controllers
 
 
         [HttpPost("update-status")]
-        [Authorize(Roles = "Manager,TravelHr")]
+        [Authorize]
         public async Task<IActionResult> UpdateStatus([FromBody] TravelRequestStatusUpdateDto dto)
         {
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -286,7 +287,7 @@ namespace SRS_TravelDesk.Controllers
                 : BadRequest("Invalid request or insufficient permissions.");
         }
 
-        [Authorize]
+        [Authorize(Roles = "TravelHr")]
         [HttpGet("all")]
         public async Task<IActionResult> GetAllRequests()
         {
@@ -295,8 +296,8 @@ namespace SRS_TravelDesk.Controllers
             return Ok(response);
         }
 
-        [Authorize(Roles = "Manager,TravelHr")]
-        [HttpGet("approved-by-manager")]
+        [Authorize(Roles = "TravelHr")]
+        [HttpGet("approved-by-managers")]
         public async Task<IActionResult> GetRequestsApprovedByManager()
         {
             var requests = await _travelRepo.GetRequestsApprovedByManagerAsync();
@@ -304,21 +305,7 @@ namespace SRS_TravelDesk.Controllers
             return Ok(response);
         }
 
-        [HttpGet("pending/manager-approval")]
-        [Authorize(Roles = "Manager")]
-        public async Task<IActionResult> GetPendingRequestsForManager()
-        {
-            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            if (!int.TryParse(userIdStr, out int managerId))
-                return Unauthorized("Invalid token.");
-
-            var requests = await _travelRepo.GetPendingRequestsForManagerAsync(managerId);
-            var response = requests.Select(MapToDto).ToList();
-
-            return Ok(response);
-        }
-
+        
         [Authorize]
         [HttpPost("{id}/upload-documents")]
         public async Task<IActionResult> UploadAdditionalDocuments(int id, [FromBody] List<DocumentUploadDto> newDocuments)
@@ -405,24 +392,67 @@ namespace SRS_TravelDesk.Controllers
             return Ok(response);
         }
 
-
-        [HttpPost("upload-tempdoc")]
-        public async Task<IActionResult> UploadDocuments([FromBody] List<DocumentUploadDto> newDocuments)
+        [Authorize(Roles = "TravelHr")]
+        [HttpGet("booked")]
+        public async Task<IActionResult> GetBookedRequests()
         {
-            if (newDocuments == null || !newDocuments.Any())
-                return BadRequest("No documents provided.");
+            var requests = await _travelRepo.GetBookedRequestsAsync();
+            var response = requests.Select(MapToDto).ToList();
+            return Ok(response);
+        }
 
-            var parsedDocs = newDocuments
-                .Where(d => !string.IsNullOrWhiteSpace(d.FileContentBase64) && !string.IsNullOrWhiteSpace(d.DocumentType))
-                .Select(d => new Document
-                {
-                    FileName = d.FileName,
-                    FileContent = Convert.FromBase64String(d.FileContentBase64),
-                    DocumentType = Enum.Parse<DocumentType>(d.DocumentType, ignoreCase: true)
+        [HttpGet("pending/manager-approval")]
+        [Authorize(Roles = "Manager")]
+        public async Task<IActionResult> GetPendingRequestsForManager()
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-                }).ToList();
+            if (!int.TryParse(userIdStr, out int managerId))
+                return Unauthorized("Invalid token.");
 
-            return Ok(parsedDocs);
+            var requests = await _travelRepo.GetPendingRequestsForManagerAsync(managerId);
+            var response = requests.Select(MapToDto).ToList();
+
+            return Ok(response);
+        }
+
+        [HttpGet("manager-approved")]
+        [Authorize(Roles = "Manager")]
+        public async Task<IActionResult> GetRequestApprovedViaManager()
+        {
+            int userId = GetLoggedInUserId();
+            var requests = await _travelRepo.GetApprovedRequestsViaManagerAsync(userId);
+            var response = requests.Select(MapToDto).ToList();
+            return Ok(response);
+        }
+
+        [HttpGet("returned-to-manager")]
+        [Authorize(Roles = "Manager")]
+        public async Task<IActionResult> GetRequestsReturnedToManager()
+        {
+            int userId = GetLoggedInUserId();
+            var requests = await _travelRepo.GetRequestsReturnedToManagerAsync(userId);
+            var response = requests.Select(MapToDto).ToList();
+            return Ok(response);
+        }
+
+       
+
+        [HttpGet("returned-to-employee")]
+        [Authorize(Roles = "Employee")]
+        public async Task<IActionResult> GetRequestsReturnedToEmployee()
+        {
+            int userId = GetLoggedInUserId();
+            var requests = await _travelRepo.GetRequestsReturnedToEmployeeAsync(userId);
+            var response = requests.Select(MapToDto).ToList();
+            return Ok(response);
+        }
+
+      
+        private int GetLoggedInUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            return userIdClaim != null ? int.Parse(userIdClaim.Value) : throw new UnauthorizedAccessException("User ID not found in token");
         }
 
 
