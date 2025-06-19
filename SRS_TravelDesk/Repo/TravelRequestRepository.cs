@@ -20,7 +20,7 @@ namespace SRS_TravelDesk.Repo
             request.Status = TravelStatus.Submitted;
 
             _context.TravelRequests.Add(request);
-            await _context.SaveChangesAsync(); 
+            await _context.SaveChangesAsync();
             if (documents != null && documents.Any())
             {
                 foreach (var doc in documents)
@@ -39,6 +39,7 @@ namespace SRS_TravelDesk.Repo
         {
             return await _context.TravelRequests
                 .Include(r => r.Comments)
+                    .ThenInclude(c => c.CommentedBy)
                 .Include(r => r.Documents)
                 .Include(r => r.RequestedBy)
                 .Where(r => r.UserId == userId)
@@ -49,11 +50,12 @@ namespace SRS_TravelDesk.Repo
         {
             return await _context.TravelRequests
                 .Include(r => r.Comments)
+                    .ThenInclude(c => c.CommentedBy)
                 .Include(r => r.Documents)
                 .Include(r => r.RequestedBy)
                 .FirstOrDefaultAsync(r => r.Id == requestId);
         }
-       
+
 
         public async Task<bool> UpdateRequestAsync(TravelRequest updatedRequest)
         {
@@ -86,7 +88,7 @@ namespace SRS_TravelDesk.Repo
             request.Status = TravelStatus.Submitted;
             request.UpdatedDate = DateTime.UtcNow;
 
-           
+
 
             await _context.SaveChangesAsync();
             return true;
@@ -105,9 +107,11 @@ namespace SRS_TravelDesk.Repo
             if (request.RequestedBy.ManagerId != dto.UpdatedByUserId)
                 return false; // Only their own manager can approve
 
-            if (dto.NewStatus != TravelStatus.ApprovedByManager && dto.NewStatus != TravelStatus.ReturnedToEmployee && dto.NewStatus == TravelStatus.Disapprove)
+            if (dto.NewStatus != TravelStatus.ApprovedByManager &&
+    dto.NewStatus != TravelStatus.ReturnedToEmployee &&
+    dto.NewStatus != TravelStatus.Disapprove)
                 return false; // Manager can approve, disapprove or return
-           
+
             request.Status = dto.NewStatus;
             request.UpdatedDate = DateTime.UtcNow;
 
@@ -151,7 +155,7 @@ namespace SRS_TravelDesk.Repo
             {
                 isValid = true;
             }
-            else if (dto.NewStatus == TravelStatus.ReturnedToManager)
+            else if (request.Status == TravelStatus.ApprovedByManager && dto.NewStatus == TravelStatus.ReturnedToManager)
             {
                 isValid = true;
             }
@@ -210,10 +214,53 @@ namespace SRS_TravelDesk.Repo
                 .Include(r => r.RequestedBy)
                 .Include(r => r.Documents)
                 .Include(r => r.Comments)
-                .Where(r => r.Status == TravelStatus.Submitted && r.RequestedBy.ManagerId == managerId)
+                .Where(r => (r.Status == TravelStatus.Submitted) && r.RequestedBy.ManagerId == managerId)
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<TravelRequest>> GetApprovedRequestsViaManagerAsync(int managerId)
+        {
+            return await _context.TravelRequests
+                .Include(r => r.RequestedBy)
+                .Include(r => r.Documents)
+                .Include(r => r.Comments)
+                .Where(r => r.Status == TravelStatus.ApprovedByManager && r.RequestedBy.ManagerId == managerId)
+                .ToListAsync();
+        }
+        public async Task<IEnumerable<TravelRequest>> GetRequestsReturnedToManagerAsync(int managerId)
+        {
+            return await _context.TravelRequests
+                .Where(r => r.Status == TravelStatus.ReturnedToManager && r.RequestedBy.ManagerId == managerId)
+                .Include(r => r.Comments)
+                    .ThenInclude(c => c.CommentedBy)
+                .Include(r => r.Documents)
+                .Include(r => r.RequestedBy)
+                .ToListAsync();
+        }
+
+       
+
+        public async Task<IEnumerable<TravelRequest>> GetRequestsReturnedToEmployeeAsync(int employeeId)
+        {
+            return await _context.TravelRequests
+                .Where(r => r.Status == TravelStatus.ReturnedToEmployee && r.UserId == employeeId)
+                .Include(r => r.Comments)
+                    .ThenInclude(c => c.CommentedBy)
+                .Include(r => r.Documents)
+                .Include(r => r.RequestedBy)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<TravelRequest>> GetBookedRequestsAsync()
+        {
+            return await _context.TravelRequests
+                .Where(r => r.Status == TravelStatus.BookedByAdmin)
+                .Include(r => r.RequestedBy)
+                .Include(r => r.Documents)
+                .Include(r => r.Comments)
+                    .ThenInclude(c => c.CommentedBy)
+                .ToListAsync();
+        }
         public async Task AddDocumentsAsync(int travelRequestId, List<Document> newDocuments)
         {
             // Get all existing documents for the request
@@ -240,7 +287,7 @@ namespace SRS_TravelDesk.Repo
                 .Include(r => r.Comments)
                     .ThenInclude(c => c.CommentedBy)
                 .Include(r => r.RequestedBy)
-                .Where(r =>r.Status == status)
+                .Where(r => r.Status == status)
                 .ToListAsync();
         }
 

@@ -26,6 +26,9 @@ namespace SRS_TravelDesk.Repo
         Task<bool> ReturnToManagerAsync(int requestId, string? comment, int updatedByUserId);
         Task<bool> ReturnToEmployeeAsync(int requestId, string? comment, int updatedByUserId);
         Task<IEnumerable<TravelRequest>> GetDisapprovedAndClosedRequestsAsync(int userId);
-
+        Task<IEnumerable<TravelRequest>> GetRequestsReturnedToManagerAsync(int managerId);
+        Task<IEnumerable<TravelRequest>> GetRequestsReturnedToEmployeeAsync(int employeeId);
+        Task<IEnumerable<TravelRequest>> GetApprovedRequestsViaManagerAsync(int managerId);
+        Task<IEnumerable<TravelRequest>> GetBookedRequestsAsync();
     }
 }
