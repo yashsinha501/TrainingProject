@@ -21,6 +21,12 @@ namespace SRS_TravelDesk.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Password))
+            {
+                return BadRequest(new { message = "Email and Password are required." });
+            }
+
+
             var user = await _userRepository.AuthenticateAsync(dto.Email, dto.Password);
 
             if (user == null)
